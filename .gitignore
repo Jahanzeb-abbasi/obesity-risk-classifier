@@ -10,5 +10,5 @@ __pycache__/
 
 data/
 
-artifacts/random_forest_model.joblib
-artifacts/preprocessed_data.joblib
+artifacts/*
+!artifacts/feature_cols.joblib

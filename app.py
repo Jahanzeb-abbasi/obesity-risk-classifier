@@ -78,6 +78,7 @@ faf_options = {"I don't exercise": 0.0, "1–2 days a week": 1.0, "2–4 days a 
 tue_options = {"0–2 hours": 0.0, "3–5 hours": 1.0, "More than 5 hours": 2.0}
 
 GITHUB_URL = "https://github.com/Jahanzeb-abbasi/obesity-risk-classifier"
+KAGGLE_DATASET = "https://www.kaggle.com/competitions/playground-series-s4e2"
 
 FRIENDLY_NAMES = {
     "Age": "Age", "Height": "Height", "Weight": "Weight",
@@ -102,6 +103,25 @@ def bmi_category(bmi):
         return "Obesity Class II"
     else:
         return "Obesity Class III"
+
+def github_button_html():
+    return f"""
+    <a href="{GITHUB_URL}" target="_blank" style="
+        display:inline-flex; align-items:center; gap:8px;
+        background-color:#181717; color:#ffffff; text-decoration:none;
+        padding:0.5rem 1rem; border-radius:8px; font-weight:600; font-size:0.9rem;">
+        <svg height="18" width="18" viewBox="0 0 16 16" fill="#ffffff">
+            <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38
+            0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13
+            -.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07
+            -1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82
+            .64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12
+            .51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2
+            0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/>
+        </svg>
+        View on GitHub
+    </a>
+    """
 
 # ---------- Page setup ----------
 
@@ -154,9 +174,10 @@ def show_about():
         "from eating habits, activity levels, and body measurements."
     )
     st.markdown(
-        "**Dataset:** Kaggle Playground Series S4E2 — 20,758 rows, 7 risk classes, "
+        "**Dataset:** Kaggle Playground Series S4E2 - 20,758 rows, 7 risk classes, "
         "16 lifestyle & body-measurement features."
     )
+    st.markdown(f"Link → {KAGGLE_DATASET}")
     st.markdown("**Models compared:**")
     comparison_df = pd.DataFrame({
         "Model": ["Logistic Regression", "Random Forest"],
@@ -165,9 +186,30 @@ def show_about():
     })
     st.table(comparison_df.set_index("Model"))
     st.markdown("**Deployed model:** Random Forest (200 trees)")
-    st.markdown("**Tech stack:** Python · pandas · scikit-learn · Streamlit")
-    st.markdown(f"[📂 View source on GitHub]({GITHUB_URL})")
-    st.caption("⚠️ Educational project only — not medical advice.")
+    st.markdown("**Tech stack:** Python · Pandas · Scikit-learn · Streamlit")
+    st.markdown(github_button_html(), unsafe_allow_html=True)
+
+    st.divider()
+    st.write("**What matters most to this model overall:**")
+    st.caption(
+        "This reflects the model's general behavior across all 20,758 training rows — "
+        "not a personalized breakdown of this specific prediction."
+    )
+    importances = sorted(zip(feature_cols, rf.feature_importances_), key=lambda x: x[1], reverse=True)
+    for col, imp in importances[:6]:
+        st.markdown(
+            f"""<div style="display:flex; align-items:center; margin-bottom:4px;">
+            <div style="width:180px; font-size:0.85rem;">{friendly_name(col)}</div>
+            <div style="flex:1; background:#2A3436; border-radius:4px; height:14px; margin:0 8px;">
+                <div style="width:{imp*100:.1f}%; background:#3FA796; height:14px; border-radius:4px;"></div>
+            </div>
+            <div class="mono-num" style="width:50px; text-align:right;">{imp*100:.1f}%</div>
+            </div>""",
+            unsafe_allow_html=True,
+        )
+
+    st.divider()
+
     if st.button("Close"):
         st.rerun()
 
@@ -183,7 +225,7 @@ with st.sidebar:
 
 # ---------- Main form ----------
 
-st.title("Obesity Risk Predictor, 🩺")
+st.title("Obesity Risk Predictor 🩺")
 st.write("Fill in your details below to estimate your obesity risk category.")
 
 with st.form("prediction_form"):
@@ -241,7 +283,7 @@ with st.form("prediction_form"):
                 "What is your primary mode of transportation?",
                 ["Automobile", "Bike", "Motorbike", "Public_Transportation", "Walking"]
             )
-            tue_label = st.selectbox("How much daily screen time do you have (phone, computer, TV)?", list(tue_options.keys()))
+            tue_label = st.selectbox("How much daily screen time do you have?", list(tue_options.keys()))
 
     submitted = st.form_submit_button("🔍 Get My Risk Assessment", use_container_width=True, type="primary")
 
@@ -339,27 +381,11 @@ if submitted:
             unsafe_allow_html=True,
         )
 
-    st.divider()
-    st.write("**What matters most to this model overall:**")
-    st.caption(
-        "This reflects the model's general behavior across all 20,758 training rows — "
-        "not a personalized breakdown of this specific prediction."
-    )
-    importances = sorted(zip(feature_cols, rf.feature_importances_), key=lambda x: x[1], reverse=True)
-    for col, imp in importances[:6]:
-        st.markdown(
-            f"""<div style="display:flex; align-items:center; margin-bottom:4px;">
-            <div style="width:180px; font-size:0.85rem;">{friendly_name(col)}</div>
-            <div style="flex:1; background:#2A3436; border-radius:4px; height:14px; margin:0 8px;">
-                <div style="width:{imp*100:.1f}%; background:#3FA796; height:14px; border-radius:4px;"></div>
-            </div>
-            <div class="mono-num" style="width:50px; text-align:right;">{imp*100:.1f}%</div>
-            </div>""",
-            unsafe_allow_html=True,
-        )
+
 
 # ---------- Footer ----------
 
 st.divider()
 st.caption("⚠️ This is a machine learning estimate for educational purposes - not medical advice.")
-st.caption(f"Built as an Applied AI Engineering capstone project · [GitHub Repo]({GITHUB_URL})")
+st.write("Built as an Applied AI Engineering capstone project")
+st.markdown(github_button_html(), unsafe_allow_html=True)

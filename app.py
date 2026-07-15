@@ -1,6 +1,8 @@
 import pandas as pd
 import streamlit as st
 import joblib
+import os
+import requests
 
 # ---------- Preprocessing ----------
 
@@ -156,11 +158,27 @@ h1, h2, h3 { font-family: 'Space Grotesk', sans-serif !important; }
 </style>
 """, unsafe_allow_html=True)
 
+MODEL_URL = "https://huggingface.co/Zaibyyx/obesity-risk-classifier-model/resolve/main/random_forest_model.joblib"
+MODEL_PATH = "artifacts/random_forest_model.joblib"
+
+
 @st.cache_resource
 def load_artifacts():
-    data = joblib.load("artifacts/preprocessed_data.joblib")
-    rf = joblib.load("artifacts/random_forest_model.joblib")
-    return rf, data["feature_cols"]
+
+    os.makedirs("artifacts", exist_ok=True)
+
+    if not os.path.exists(MODEL_PATH):
+        with st.spinner("Downloading model... (first run only)"):
+            response = requests.get(MODEL_URL)
+            response.raise_for_status()
+
+            with open(MODEL_PATH, "wb") as f:
+                f.write(response.content)
+
+    rf = joblib.load(MODEL_PATH)
+    feature_cols = joblib.load("artifacts/feature_cols.joblib")
+
+    return rf, feature_cols
 
 rf, feature_cols = load_artifacts()
 
@@ -207,7 +225,7 @@ def show_about():
             </div>""",
             unsafe_allow_html=True,
         )
-
+        
     st.divider()
 
     if st.button("Close"):
